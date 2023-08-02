@@ -1,0 +1,8 @@
+jupyter>=1.0.0
+matplotlib>=3.6.2
+numpy>=1.23.1
+qiskit>=0.39.2
+qiskit_ibm_runtime>=0.8.0
+qiskit_terra>=0.22.2
+qutip>=4.7.0
+scipy>=1.9.0
