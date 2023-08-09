@@ -1,11 +1,11 @@
 import numpy as np
 from qutip import Qobj
-from typing import Union, Literal
+from typing import Literal
 
 class System():
     def __init__(self,
-                 Hamiltonian: Union[list[list[float]], np.ndarray, Qobj],
-                 dipole_moment_amplitude: Union[list[float], list[int], float, int] = [1],
+                 Hamiltonian: list[list[float]] | np.ndarray | Qobj,
+                 dipole_moment_amplitude: list[float] | list[int] | float | int = [1],
                  ):
         '''Create an object that contains the information about the system intended as a collection of (possibly) interactive two-level electronic systems.
 
@@ -54,7 +54,7 @@ class FeynmanDiagram():
 
     def __init__(self,
                  FD_type: Literal["a", "absorption", "gsb", "ground state bleaching", "se", "stimulated emission", "esa", "excited state absorption"],
-                 delay_time: Union[np.ndarray, list[list[float]], list[float], float, list[list[int]], list[int], int],
+                 delay_time: np.ndarray | list[list[float]] | list[float] | float | list[list[int]] | list[int] | int,
                  ):
         '''Create an object that contains the information about the contribution of the response function to be simulated.
 

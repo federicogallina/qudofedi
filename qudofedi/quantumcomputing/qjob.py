@@ -12,7 +12,7 @@ import string
 import random
 import shutil
 from datetime import datetime
-from typing import Union, Any
+from typing import Any
 from qudofedi.experiment_info import FeynmanDiagram, System
 from .circuits import LinearSpectroscopyCircuit, ThirdOrderSpectroscopyCircuit
 
@@ -88,7 +88,7 @@ class Qjob():
         return qcs
 
     def show_circuit(self,
-                     index: Union[list[int], int] = None,
+                     index: list[int] | int = None,
                      ):
         '''Print the quantum circuit(s) associated with the Feynman Diagram of the Qjob object.
 
@@ -228,9 +228,9 @@ class Qjob():
         return options
 
     def __LinearSpectroscopy(self,
-                             q_options: QuantumInstance,
+                             q_options: QuantumInstance | Options,
                              runtime: bool,
-                             runtime_service: QiskitRuntimeService,
+                             runtime_service: QiskitRuntimeService | None,
                              save_checkpoint: bool,
                              directory_name: str,
                              ) -> np.ndarray:
@@ -289,9 +289,9 @@ class Qjob():
         return response_function
 
     def __ThirdOrderSpectroscopy(self,
-                                 q_options: QuantumInstance,
+                                 q_options: QuantumInstance | Options,
                                  runtime: bool,
-                                 runtime_service: QiskitRuntimeService,
+                                 runtime_service: QiskitRuntimeService | None,
                                  save_checkpoint: bool,
                                  directory_name: str,
                                  ) -> np.ndarray:
@@ -383,14 +383,14 @@ class Qjob():
     def run(self,
             backend,
             shots: int = 4000,
-            noise_model: NoiseModel = None,
+            noise_model: NoiseModel | None = None,
             coupling_map: Any = None,
             basis_gates: Any = None,
-            tags = None,
+            tags: Any = None,
             runtime: bool = False,
-            runtime_service: QiskitRuntimeService = None,
+            runtime_service: QiskitRuntimeService | None = None,
             save_Qjob: bool = False,
-            save_name: str = None,
+            save_name: str | None = None,
             save_checkpoint: bool = False,
             **kwargs,
             ) -> np.ndarray:
