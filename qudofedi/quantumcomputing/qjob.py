@@ -4,6 +4,8 @@ from qiskit.opflow import CircuitSampler, CircuitStateFn, StateFn, PauliExpectat
 from qiskit_ibm_runtime import QiskitRuntimeService, Session, Options, Estimator
 from qiskit.utils import QuantumInstance
 from qiskit_aer.noise import NoiseModel
+from qiskit_ibm_provider.ibm_backend import IBMBackend
+from qiskit_aer.backends.qasm_simulator import QasmSimulator
 import numpy as np
 import pickle
 import warnings
@@ -381,7 +383,7 @@ class Qjob():
         return response_function
 
     def run(self,
-            backend,
+            backend: IBMBackend | QasmSimulator,
             shots: int = 4000,
             noise_model: NoiseModel | None = None,
             coupling_map: Any = None,
