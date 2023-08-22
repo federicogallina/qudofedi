@@ -8,6 +8,8 @@ from qiskit_ibm_provider.ibm_backend import IBMBackend
 from qiskit_aer.backends.qasm_simulator import QasmSimulator
 import numpy as np
 import pickle
+import json
+import io
 import warnings
 import os
 import string
@@ -20,19 +22,13 @@ from .circuits import LinearSpectroscopyCircuit, ThirdOrderSpectroscopyCircuit
 
 def load(name: str,
          ):
-    '''Load the information about a Qjob from a .pkl file.
+    '''Load the information about a Qjob from a .json file.
     
     Input:
     - name: str
         Name of the origin file.
     '''
-    if not name.endswith(".pkl"):
-        name = name + ".pkl"
-
-    with open(name, "rb") as f:
-        qjob_dict = pickle.load(f)
-    
-    job = Qjob().from_dict(qjob_dict)
+    job = Qjob().load(name)
 
     return job
 
@@ -42,17 +38,17 @@ class Qjob():
 
     def __reset_computational_details(self,
                                       ):
-        self.computational_details = {"Backend": None,
-                                      "Shots": None,
-                                      "Noise Model": None,
-                                      "Coupling Map": None,
-                                      "Basis Gates": None,
-                                      "Tags": None,
-                                      "Starting Time": None,
-                                      "Ending Time": None,
-                                      "Computation Time": None,
-                                      "Results per Circuit": None,
-                                      }
+        computational_details = {"Backend": None,
+                                 "Shots": None,
+                                 "Noise Model": None,
+                                 "Coupling Map": None,
+                                 "Basis Gates": None,
+                                 "Tags": None,
+                                 "Starting Time": None,
+                                 "Ending Time": None,
+                                 "Computation Time": None,
+                                 }
+        return computational_details
 
     def __init__(self,
                  system: System | None = None,
@@ -65,7 +61,7 @@ class Qjob():
             self.FD_type = None
             self.delay_time = None
         self.system = system
-        self.__reset_computational_details()
+        self.computational_details = self.__reset_computational_details()
         self.response_function = None
 
     def get_circuits(self,
@@ -126,7 +122,7 @@ class Qjob():
     def to_dict(self,
                 ) -> dict:
         '''Return a dictionary containing the information about the Qjob.'''
-        qjob_dict = {"System Size":self.system.system_size,
+        qjob_dict = {"System Size": self.system.system_size,
                      "System Hamiltonian": self.system.Hamiltonian,
                      "System Dipole Moment Amplitudes": self.system.dipole_moment,
                      "Feynman Diagram Type": self.FD_type,
@@ -146,50 +142,94 @@ class Qjob():
         - qjob_dict: dict
             A dictionary used as the base for the Qjob.
         '''
-        self.FD_type = qjob_dict["Feynman Diagram Type"]
-        self.delay_time = qjob_dict["Delay Time"]
-        self.system = System(qjob_dict["System Hamiltonian"],
-                            qjob_dict["System Dipole Moment Amplitudes"],
+        self.FD_type = qjob_dict.pop("Feynman Diagram Type", None)
+        self.delay_time = qjob_dict.pop("Delay Time", None)
+        self.system = System(qjob_dict.pop("System Hamiltonian", None),
+                            qjob_dict.pop("System Dipole Moment Amplitudes", None),
                             )
-        self.computational_details = qjob_dict["Computational details"]
-        self.response_function = qjob_dict["Response Function"]
+        self.computational_details = qjob_dict.pop("Computational details", self.__reset_computational_details())
+        self.response_function = qjob_dict.pop("Response Function", None)
 
         return self
 
     def save(self,
              name: str,
              ):
-        '''Save the information about the Qjob as a .pkl file.
+        '''Save the information about the Qjob.
         
         Input:
         - name: str
-            Name of the destination file.
+            Name of the destination directory.
         '''
-        if not name.endswith(".pkl"):
-            name = name + ".pkl"
+        try:
+            # Creating the directory.
+            os.mkdir(name)
+        except:
+            pass
 
-        with open(name, "wb") as f:
-            pickle.dump(self.to_dict(), f)
+        path = os.path.join(os.getcwd(), name)
+        data = self.to_dict()
+
+        # Saving the computational details
+        with open(os.path.join(path, "compdet_" + name + ".pkl"),
+                  "wb",
+                  ) as file:
+            compdet = data["Computational details"]
+            pickle.dump(compdet,
+                        file,
+                        protocol = -1)
+
+        # Saving the rest of data
+        data.pop("Computational details")
+        with open(os.path.join(path, "data_" + name + ".pkl"),
+                  "wb",
+                  ) as file:
+            pickle.dump(data,
+                        file,
+                        protocol=-1)
         
-        print("File saved in "
-              + os.getcwd()
-              + name)
+        print("File saved in " + path)
 
     def load(self,
              name: str,
+             exclude_compdet = True,
              ):
-        '''Load the information about a Qjob from a .pkl file.
+        '''Load the information about a Qjob from a directory with files.
         
         Input:
         - name: str
-            Name of the origin file.
+            Name of the origin directory.
         '''
-        if not name.endswith(".pkl"):
-            name = name + ".pkl"
-
-        with open(name, "rb") as f:
-            qjob_dict = pickle.load(f)
+        try:
+            path = os.path.join(os.getcwd(), name)
+        except Exception as err:
+            raise Exception("Error during loading: ", err) 
         
+        qjob_dict = {}
+
+        # Loading the computational details
+        if not exclude_compdet:
+            try:
+                temp_dict = {}
+                with open(os.path.join(path, "compdet_" + name + ".pkl"),
+                          "rb",
+                          ) as file:
+                    temp_dict = pickle.load(file)
+                qjob_dict.update(temp_dict)
+            except Exception as err:
+                warnings.WarningMessage("Error " + err + " when trying to retrieve computational details from directory " + path)
+        
+        # Loading the rest of data
+        try:
+            temp_dict = {}
+            with open(os.path.join(path, "data_" + name + ".pkl"),
+                      "rb",
+                      ) as file:
+                temp_dict = pickle.load(file)
+            qjob_dict.update(temp_dict)
+        except Exception as err:
+            warnings.WarningMessage("Error " + err + " when trying to retrieve data from directory " + path)
+
         self.from_dict(qjob_dict)
 
         return self
@@ -492,7 +532,7 @@ class Qjob():
             print("Error during computation: ", err)
 
             #Resetting the Qjob.
-            self.__reset_computational_details()
+            self.computational_details = self.__reset_computational_details()
 
             #Deleting the checkpoint directory and its content if save_checkpoint is True.
             if save_checkpoint and not runtime:
