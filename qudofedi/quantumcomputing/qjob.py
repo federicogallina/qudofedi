@@ -77,7 +77,7 @@ class Qjob():
         Return:
         list[QuantumCircuit]
         '''
-        #Retriving the circuits.
+        # Retriving the circuits.
         if self.FD_type in self._linear_name_list:
             qcs = LinearSpectroscopyCircuit(self.system)[0]
         else: 
@@ -96,10 +96,10 @@ class Qjob():
         - index: Union[list[int], int]
             Index of the Feynman Diagram to be printed.
         '''
-        #Retriving the circuits.
+        # Retriving the circuits.
         qcs = self.get_circuits(self.system)
         
-        #Checking what to print
+        # Checking what to print
         if self.system.system_size == 1:
             if index != 0 and index != None:
                 warnings.warn("Index is not considered as there is only 1 parametrized circuit.")
@@ -278,14 +278,15 @@ class Qjob():
                              runtime: bool,
                              runtime_service: QiskitRuntimeService | None,
                              save_checkpoint: bool,
+                             start_from_checkpoint: bool,
                              directory_name: str,
                              ) -> np.ndarray:
         '''
         '''
-        #Retriving the circuits, coefficients and parameters.
+        # Retriving the circuits, coefficients and parameters.
         (qcs, coefs, T_param) = LinearSpectroscopyCircuit(self.system)
 
-        #Creating the measurement operator (X+iY on the ancilla qubit).
+        # Creating the measurement operator (X+iY on the ancilla qubit).
         measurement_op = PauliSumOp(SparsePauliOp.from_list([('X'+'I'*self.system.system_size, 1.),
                                                              ('Y'+'I'*self.system.system_size, 1.j),
                                                              ],
@@ -293,30 +294,46 @@ class Qjob():
                                     )
 
         if not runtime:
-            #Initializing the output array.
-            response_function = np.zeros(len(self.delay_time), dtype='complex128')
+            # Initializing the response_function array and setting the number of already_examined_circuits.
+            if start_from_checkpoint:
+                response_function = np.load(os.path.join(directory_name, "response_function.npy"))
+                already_examined_circuits = np.load(os.path.join(directory_name, "examined_circuits"))[0]
 
-            #Running the circuits.
+            else:
+                response_function = np.zeros(len(self.delay_time), dtype='complex128')
+                already_examined_circuits = 0
+
+            # Printing a statement with the number of total circuits to be evaluated.
+            tot_circuits = 2 * len(qcs) * len(self.delay_time)
+            print("Total number of circuits = {}".format(tot_circuits))
+
+            # Running the circuits.
             for n_qc, qc in enumerate(qcs):
-                measurable_expression = StateFn(measurement_op, is_measurement=True).compose(CircuitStateFn(qc))
-                expectation = PauliExpectation().convert(measurable_expression)
-                sampler = CircuitSampler(q_options).convert(expectation, {T_param:self.delay_time})
-                results = np.array(sampler.eval())
-                response_function = response_function + results*coefs[n_qc]
+                solved_circuits = 2 * (n_qc + 1) * len(self.delay_time)
 
-                #Saving checkpoints if save_checkpoint is True.
-                if save_checkpoint:
-                    np.save(os.path.join(directory_name, "response_function"), response_function)
-                    np.save(os.path.join(directory_name, "examined_circuits"), np.array([n_qc + 1, len(qcs)]))
+                if solved_circuits > already_examined_circuits:
+                    measurable_expression = StateFn(measurement_op, is_measurement=True).compose(CircuitStateFn(qc))
+                    expectation = PauliExpectation().convert(measurable_expression)
+                    sampler = CircuitSampler(q_options).convert(expectation, {T_param:self.delay_time})
+                    results = np.array(sampler.eval())
+                    response_function = response_function + results*coefs[n_qc]
+
+                    # Printing a statement with the number of circuits evaluated.
+                    print("Solved: {}/{}".format(solved_circuits, tot_circuits))
+
+                    # Saving checkpoints if save_checkpoint is True.
+                    if save_checkpoint:
+                        np.save(os.path.join(directory_name, "response_function"), response_function)
+                        np.save(os.path.join(directory_name, "examined_circuits"), np.array([solved_circuits, tot_circuits]))
 
         else:
-            #Binding the parameters.
+            # Binding the parameters.
             qcs_job = [qc_time.bind_parameters({T_param:T})
                        for T in self.delay_time
                        for qc_time in qcs
                        ]
 
-            #Running the circuits.
+            # Running the circuits.
             with Session(service = runtime_service,
                          backend = self.computational_details["Backend"],
                          ):
@@ -339,14 +356,15 @@ class Qjob():
                                  runtime: bool,
                                  runtime_service: QiskitRuntimeService | None,
                                  save_checkpoint: bool,
+                                 start_from_checkpoint: bool,
                                  directory_name: str,
                                  ) -> np.ndarray:
         '''
         '''
-        #Retriving the circuits, coefficients and parameters.
+        # Retriving the circuits, coefficients and parameters.
         (qcs, coefs, T1_param, T2_param, T3_param) = ThirdOrderSpectroscopyCircuit(self.FD_type, self.system)
 
-        #Creating the measurement operator (X+iY on the ancilla qubit).
+        # Creating the measurement operator (X+iY on the ancilla qubit).
         measurement_op = PauliSumOp(SparsePauliOp.from_list([('X'+'I'*self.system.system_size, 1.),
                                                              ('Y'+'I'*self.system.system_size, 1.j),
                                                              ],
@@ -354,15 +372,21 @@ class Qjob():
                                     )
 
         if not runtime:
-            #Initializing the output array.
-            response_function = np.zeros((len(self.delay_time[0]),
-                                          len(self.delay_time[1]),
-                                          len(self.delay_time[2]),
-                                          ),
-                                         dtype ='complex128',
-                                         )
+            # Initializing the response_function array and setting the number of already_examined_circuits.
+            if start_from_checkpoint:
+                response_function = np.load(os.path.join(directory_name, "response_function.npy"))
+                already_examined_circuits = np.load(os.path.join(directory_name, "examined_circuits"))[0]
+                
+            else:
+                response_function = np.zeros((len(self.delay_time[0]),
+                                              len(self.delay_time[1]),
+                                              len(self.delay_time[2]),
+                                              ),
+                                             dtype ='complex128',
+                                             )
+                already_examined_circuits = 0
 
-            #Creating the time combinations.
+            # Creating the time combinations.
             times = [[t1,t2,t3]
                      for t1 in self.delay_time[0]
                      for t2 in self.delay_time[1]
@@ -372,28 +396,36 @@ class Qjob():
             times_2 = [time[1] for time in times]
             times_3 = [time[2] for time in times]
 
-            #Printing a statement with the number of total circuits to be evaluated.
-            tot_circuits = len(qcs) * len(self.delay_time[0]) * len(self.delay_time[1]) * len(self.delay_time[2])
+            # Printing a statement with the number of total circuits to be evaluated.
+            tot_circuits = 2 * len(qcs) * len(self.delay_time[0]) * len(self.delay_time[1]) * len(self.delay_time[2])
             print("Total number of circuits = {}".format(tot_circuits))
 
-            #Running the circuits.
+            # Running the circuits.
             for n_qc, qc in enumerate(qcs):
-                measurable_expression = StateFn(measurement_op, is_measurement=True).compose(CircuitStateFn(qc))
-                expectation = PauliExpectation().convert(measurable_expression)
-                sampler = CircuitSampler(q_options).convert(expectation, {T1_param:times_1, T2_param:times_2, T3_param:times_3})
-                results = np.array(sampler.eval())
-                response_function = response_function + coefs[n_qc] * np.reshape(results, (len(self.delay_time[0]), len(self.delay_time[1]), len(self.delay_time[2])))
+                solved_circuits = 2 * (n_qc+1) * len(self.delay_time[0]) * len(self.delay_time[1]) * len(self.delay_time[2])
+                
+                if solved_circuits > already_examined_circuits:
+                    measurable_expression = StateFn(measurement_op, is_measurement=True).compose(CircuitStateFn(qc))
+                    expectation = PauliExpectation().convert(measurable_expression)
+                    sampler = CircuitSampler(q_options).convert(expectation,
+                                                                {T1_param: times_1,
+                                                                T2_param: times_2,
+                                                                T3_param:times_3,
+                                                                },
+                                                                )
+                    results = np.array(sampler.eval())
+                    response_function = response_function + coefs[n_qc] * np.reshape(results, (len(self.delay_time[0]), len(self.delay_time[1]), len(self.delay_time[2])))
 
-                #Printing a statement with the number of circuits evaluated.
-                solved_circuits = (n_qc+1) * len(self.delay_time[0]) * len(self.delay_time[1]) * len(self.delay_time[2])
-                print("Solved: {}/{}".format(solved_circuits, tot_circuits))
+                    # Printing a statement with the number of circuits evaluated.
+                    print("Solved: {}/{}".format(solved_circuits, tot_circuits))
 
-                #Saving checkpoints if save_checkpoint is True.
-                if save_checkpoint:
-                    np.save(os.path.join(directory_name, "response_function"), response_function)
-                    np.save(os.path.join(directory_name, "examined_circuits"), np.array([solved_circuits, tot_circuits]))
+                    # Saving checkpoints if save_checkpoint is True.
+                    if save_checkpoint:
+                        np.save(os.path.join(directory_name, "response_function"), response_function)
+                        np.save(os.path.join(directory_name, "examined_circuits"), np.array([solved_circuits, tot_circuits]))
+
         else:
-            #Binding the parameters.
+            # Binding the parameters.
             qcs_job = [qc_time.bind_parameters({T1_param:T1, T2_param:T2, T3_param:T3})
                        for T1 in self.delay_time[0]
                        for T2 in self.delay_time[1]
@@ -401,7 +433,7 @@ class Qjob():
                        for qc_time in qcs
                        ]
             
-            #Running the circuits.
+            # Running the circuits.
             with Session(service = runtime_service,
                          backend = self.computational_details["Backend"],
                          ):
@@ -421,9 +453,9 @@ class Qjob():
                                             ),
                                            )
         
-
         if self.FD_type in ['esa', 'excited state absorption']:
             response_function = - response_function
+
         return response_function
 
     def run(self,
@@ -463,11 +495,11 @@ class Qjob():
         - save_Qjob: bool
             If True, it saves the information about the Qjob as a .pkl file.
         - save_name: str
-            Name of the destination file.
+            Name for the saving option.
         - save_checkpoint: bool
-            If True, it generates a folder with checkpoint data.
+            If True, it generates a folder with checkpoint data. Not available when Qiskit Runtime is used.
         - start_from_checkpoint: bool
-            If True, it continues an existing checkpoint.
+            If True, it continues an existing checkpoint. Not available when Qiskit Runtime is used.
         - kwargs
             Extra input for a qiskit.utils.QuantumInstance (if runtime is False) or qiskit_ibm_runtime.Options (if runtime is True).
 
@@ -475,24 +507,35 @@ class Qjob():
         numpy.ndarray.
         '''
         try:
-            #Creating the checkpoint directory if save_checkpoint is True.
-            if save_checkpoint and not runtime:
+            # Checking if calculation starts from an existing checkpoint.
+            if start_from_checkpoint and not runtime:
+                directory_name = "checkpoint_" + save_name
+                path = os.path.join(os.getcwd(), directory_name)
+                if not os.path.exists(path):
+                    raise Exception("Checkpoint folder not found.")
+            # Creating the checkpoint directory when needed.
+            elif save_checkpoint and not runtime:
                 if save_name == None:
                     directory_name = "checkpoint_" + "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
                 else:
                     directory_name = "checkpoint_" + save_name
-                try:
-                    os.mkdir(directory_name)
-                except:
-                    pass
+                path = os.path.join(os.getcwd(), directory_name)
+                existing_directory = os.path.exists(path)
+                c = 1
+                while existing_directory == True:
+                    directory_name_c = directory_name + str(c)
+                    c += 1
+                    path = os.path.join(os.getcwd(), directory_name_c)
+                    existing_directory = os.path.exists(path)
+                os.mkdir(directory_name)
             else:
                 directory_name = None
 
-            #Saving starting time.
+            # Saving starting time.
             starting_time = datetime.now()
             self.computational_details["Starting Time"] = starting_time.strftime("%d/%m/%Y %H:%M:%S")
             
-            #Saving parameters of the quantum computation.
+            # Saving parameters of the quantum computation.
             self.computational_details["Backend"] = backend
             self.computational_details["Shots"] = shots
             self.computational_details["Tags"] = tags
@@ -509,30 +552,30 @@ class Qjob():
                 self.computational_details["Coupling Map"] = backend.configuration().coupling_map
                 self.computational_details["Basis Gates"] = NoiseModel.from_backend(backend).basis_gates
             
-            #Generating the QuantumInstance or the Options
+            # Generating the QuantumInstance or the Options
             if not runtime:
                 q_options = self.__QuantumInstance_generator(**kwargs)
             elif runtime:
                 q_options = self.__Options_generator(**kwargs)
 
-            #Selecting the Feynman Diagram and solving the circuits.
+            # Selecting the Feynman Diagram and solving the circuits.
             if self.FD_type in self._linear_name_list:
-                self.response_function = self.__LinearSpectroscopy(q_options, runtime, runtime_service, save_checkpoint, directory_name)
+                self.response_function = self.__LinearSpectroscopy(q_options, runtime, runtime_service, save_checkpoint, start_from_checkpoint, directory_name)
             else:
-                self.response_function = self.__ThirdOrderSpectroscopy(q_options, runtime, runtime_service, save_checkpoint, directory_name)
+                self.response_function = self.__ThirdOrderSpectroscopy(q_options, runtime, runtime_service, save_checkpoint, start_from_checkpoint, directory_name)
 
-            #Saving ending time and getting the duration.
+            # Saving ending time and getting the duration.
             ending_time = datetime.now()
             self.computational_details["Ending Time"] = ending_time.strftime("%d/%m/%Y %H:%M:%S")
             self.computational_details["Computation Time"] = ending_time - starting_time
 
-            #Saving the Qjob if save is True.
+            # Saving the Qjob if save is True.
             if save_Qjob and not runtime:
                 if save_name == None:
                     save_name = "Qjob_" + "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
                 self.save(save_name)
             
-            #Deleting the checkpoint directory and its content if save_checkpoint is True.
+            # Deleting the checkpoint directory and its content if save_checkpoint is True.
             if save_checkpoint and not runtime:
                 shutil.rmtree(directory_name)
 
@@ -541,5 +584,5 @@ class Qjob():
         except Exception as err:
             print("Error during computation: ", err)
 
-            #Resetting the Qjob.
+            # Resetting the Qjob.
             self.computational_details = self.__reset_computational_details()
