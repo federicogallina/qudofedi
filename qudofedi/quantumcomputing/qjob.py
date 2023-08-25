@@ -234,6 +234,10 @@ class Qjob():
 
         return self
 
+    def print(self,
+              ) -> None:
+        print(self.to_dict())
+
     def __QuantumInstance_generator(self,
                                     **kwargs,
                                     ) -> QuantumInstance:
@@ -431,9 +435,10 @@ class Qjob():
             tags: Any = None,
             runtime: bool = False,
             runtime_service: QiskitRuntimeService | None = None,
-            save_Qjob: bool = False,
+            save_Qjob: bool = True,
             save_name: str | None = None,
             save_checkpoint: bool = False,
+            start_from_checkpoint: bool = False,
             **kwargs,
             ) -> np.ndarray:
         '''Run the simulation on the selected IBM Quantum backend.
@@ -452,15 +457,17 @@ class Qjob():
         - tags
             Tags to identify Qjob object.
         - runtime: bool
-            If True uses IBM Runtime service.
+            If True, it uses IBM Runtime service.
         - runtime_service: QiskitRuntimeService
             The QiskitRuntimeService to be used.
         - save_Qjob: bool
-            If True save the information about the Qjob as a .pkl file.
+            If True, it saves the information about the Qjob as a .pkl file.
         - save_name: str
             Name of the destination file.
         - save_checkpoint: bool
-            If True generates a folder with checkpoint data.
+            If True, it generates a folder with checkpoint data.
+        - start_from_checkpoint: bool
+            If True, it continues an existing checkpoint.
         - kwargs
             Extra input for a qiskit.utils.QuantumInstance (if runtime is False) or qiskit_ibm_runtime.Options (if runtime is True).
 
@@ -474,7 +481,10 @@ class Qjob():
                     directory_name = "checkpoint_" + "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
                 else:
                     directory_name = "checkpoint_" + save_name
-                os.mkdir(directory_name)
+                try:
+                    os.mkdir(directory_name)
+                except:
+                    pass
             else:
                 directory_name = None
 
@@ -533,7 +543,3 @@ class Qjob():
 
             #Resetting the Qjob.
             self.computational_details = self.__reset_computational_details()
-
-            #Deleting the checkpoint directory and its content if save_checkpoint is True.
-            if save_checkpoint and not runtime:
-                shutil.rmtree(directory_name)
