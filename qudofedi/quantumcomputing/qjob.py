@@ -348,6 +348,8 @@ class Qjob():
                                                   ) * coefs,
                                        axis = 1,
                                        )
+        
+        response_function = 1.j * response_function
 
         return response_function
 
@@ -455,6 +457,8 @@ class Qjob():
         
         if self.FD_type in ['esa', 'excited state absorption']:
             response_function = - response_function
+
+        response_function = - 1.j * response_function
 
         return response_function
 
