@@ -22,10 +22,12 @@ from .circuits import LinearSpectroscopyCircuit, ThirdOrderSpectroscopyCircuit
 
 def load(name: str,
          ):
-    '''Load the information about a Qjob from a .json file.
+    '''
+    Load the information about a Qjob from a .json file.
     
-    Input:
-    - name: str
+    Parameters
+    ----------
+    name: string
         Name of the origin file.
     '''
     job = Qjob().load(name)
@@ -66,16 +68,19 @@ class Qjob():
 
     def get_circuits(self,
                      ) -> list[QuantumCircuit]:
-        '''Return a list of qiskit.QuantumCircuit associated to the Feynman Diagram of the Qjob object.
+        '''
+        Return a list of qiskit.QuantumCircuit associated to the Feynman Diagram of the Qjob object.
         
-        Input:
-        - system: System
+        Parameters
+        ----------
+        system: System
             The system of interest for the Feynamn Diagram.
-        - index: int
+
+        index: int
             Index of the Feynman Diagram to be returned.
 
         Return:
-        list[QuantumCircuit]
+        qcs: list[QuantumCircuit]
         '''
         # Retriving the circuits.
         if self.FD_type in self._linear_name_list:
@@ -88,12 +93,15 @@ class Qjob():
     def show_circuit(self,
                      index: list[int] | int = None,
                      ):
-        '''Print the quantum circuit(s) associated with the Feynman Diagram of the Qjob object.
+        '''
+        Print the quantum circuit(s) associated with the Feynman Diagram of the Qjob object.
 
-        Input:
-        - system: System
+        Parameters
+        ----------
+        system: System
             The system of interest for the Feynamn Diagram.
-        - index: Union[list[int], int]
+
+        index: list[int] | int
             Index of the Feynman Diagram to be printed.
         '''
         # Retriving the circuits.
@@ -121,7 +129,9 @@ class Qjob():
 
     def to_dict(self,
                 ) -> dict:
-        '''Return a dictionary containing the information about the Qjob.'''
+        '''
+        Return a dictionary containing the information about the Qjob.
+        '''
         qjob_dict = {"System Size": self.system.system_size,
                      "System Hamiltonian": self.system.Hamiltonian,
                      "System Dipole Moment Amplitudes": self.system.dipole_moment,
@@ -136,10 +146,12 @@ class Qjob():
     def from_dict(self,
                   qjob_dict: dict,
                   ):
-        '''Create the Qjob object from a dictionary.
+        '''
+        Create the Qjob object from a dictionary.
 
-        Input:
-        - qjob_dict: dict
+        Parameters
+        ----------
+        qjob_dict: dict
             A dictionary used as the base for the Qjob.
         '''
         self.FD_type = qjob_dict.pop("Feynman Diagram Type", None)
@@ -155,10 +167,12 @@ class Qjob():
     def save(self,
              name: str,
              ):
-        '''Save the information about the Qjob.
+        '''
+        Save the information about the Qjob.
         
-        Input:
-        - name: str
+        Parameters
+        ----------
+        name: string
             Name of the destination directory.
         '''
         try:
@@ -194,10 +208,12 @@ class Qjob():
              name: str,
              exclude_compdet = True,
              ):
-        '''Load the information about a Qjob from a directory with files.
+        '''
+        Load the information about a Qjob from a directory with files.
         
-        Input:
-        - name: str
+        Parameters
+        ----------
+        name: string
             Name of the origin directory.
         '''
         try:
@@ -282,6 +298,7 @@ class Qjob():
                              directory_name: str,
                              ) -> np.ndarray:
         '''
+        Solve the absorption spectroscopy.
         '''
         # Retriving the circuits, coefficients and parameters.
         (qcs, coefs, T_param) = LinearSpectroscopyCircuit(self.system)
@@ -362,6 +379,7 @@ class Qjob():
                                  directory_name: str,
                                  ) -> np.ndarray:
         '''
+        Solve 2D spectroscopies.
         '''
         # Retriving the circuits, coefficients and parameters.
         (qcs, coefs, T1_param, T2_param, T3_param) = ThirdOrderSpectroscopyCircuit(self.FD_type, self.system)
@@ -477,38 +495,53 @@ class Qjob():
             start_from_checkpoint: bool = False,
             **kwargs,
             ) -> np.ndarray:
-        '''Run the simulation on the selected IBM Quantum backend.
+        '''
+        Run the simulation on the selected IBM Quantum backend.
 
-        Input:
-        - backend
+        Parameters
+        ----------
+        backend: qiskit_ibm_provider.ibm_backend.IBMBackend | qiskit_aer.backends.qasm_simulator.QasmSimulator
             IBM Quantum backend.
-        - shots: int
+
+        shots: int
             Number of shots for the measure.
-        - noise_model: qiskit_aer.noise.NoiseModel
+
+        noise_model: qiskit_aer.noise.NoiseModel
             Noise model to be used. Can be used when backend is the qasm_simulator. To use the noise model of an existing backend use: qiskit_aer.noise.NoiseModel.from_backend(IBMQ_backend).
-        - coupling_map
+        
+        coupling_map
             Compling map of the quantum processor.
-        - basis_gates
+        
+        basis_gates
             List of basis gate names.
-        - tags
+        
+        tags
             Tags to identify Qjob object.
-        - runtime: bool
+        
+        runtime: bool
             If True, it uses IBM Runtime service.
-        - runtime_service: QiskitRuntimeService
+        
+        runtime_service: qiskit_ibm_runtime.QiskitRuntimeService
             The QiskitRuntimeService to be used.
-        - save_Qjob: bool
+        
+        save_Qjob: bool
             If True, it saves the information about the Qjob as a .pkl file.
-        - save_name: str
+        
+        save_name: string
             Name for the saving option.
-        - save_checkpoint: bool
+        
+        save_checkpoint: bool
             If True, it generates a folder with checkpoint data. Not available when Qiskit Runtime is used.
-        - start_from_checkpoint: bool
+        
+        start_from_checkpoint: bool
             If True, it continues an existing checkpoint. Not available when Qiskit Runtime is used.
-        - kwargs
+        
+        kwargs
             Extra input for a qiskit.utils.QuantumInstance (if runtime is False) or qiskit_ibm_runtime.Options (if runtime is True).
 
-        Return:
-        numpy.ndarray.
+        Returns
+        -------
+        response_function: numpy.ndarray
         '''
         try:
             # Checking if calculation starts from an existing checkpoint.

@@ -8,12 +8,24 @@ from qudofedi.experiment_info import System
 
 def LinearSpectroscopyCircuit(system: System,
                               ) -> tuple[list[QuantumCircuit], list[float], Parameter]:
-    '''Create the parametrized circuit for the Feynman Diagrams corresponding to the Linear Response Function (Absorption).
-    Delay time is the parameter.
+    '''
+    Create the parametrized circuit for the Feynman Diagrams corresponding to the Linear Response Function (Absorption).
 
-    Input:
-    - system: System
+    Parameters
+    ----------
+    system: System
         The system of interest.
+
+    Returns
+    -------
+    qcs: list[qiskit.QuantumCircuit]
+        A list of parametrized quantum circuits.
+
+    coefs: list[float]
+        A list of coefficients.
+    
+    T_param: qiskit.circuit.Parameter
+        A parameter representing the delay time.
     '''
     #Generating the parameter.
     T_param = Parameter("T")
@@ -58,15 +70,34 @@ def LinearSpectroscopyCircuit(system: System,
 def ThirdOrderSpectroscopyCircuit(FD_type: Literal["gsb", "ground state bleaching", "se", "stimulated emission", "esa", "excited state absorption"],
                                   system: System,
                                   ) -> tuple[list[QuantumCircuit], list[float], Parameter, Parameter, Parameter]:
-    '''Create the parametrized circuit for the Feynman Diagrams corresponding to the Third-Order(-Rephasing) Response Function (GSB, SE, ESA).
-    Delay times (T1, T2, T3) are the parameters.
+    '''
+    Create the parametrized circuit for the Feynman Diagrams corresponding to the Third-Order(-Rephasing) Response Function (GSB, SE, ESA).
     Note: we assume that the system starts in its ground state. Therefore, the first dipol operator acting on the bra and ket side of the density matrix can be mu instead of mu^- or mu^+.
 
-    Input:
-    - FD_type: Literal["gsb", "ground state bleaching", "se", "stimulated emission", "esa", "excited state absorption"]
+    Parameters
+    ----------
+    FD_type: "gsb" | "ground state bleaching" | "se" | "stimulated emission" | "esa" | "excited state absorption"
         The name of the Feynman diagram. At the moment, only linear absorption and the components of the third-order rephasing signal are implemented.
-    - system: System
+
+    system: System
         The system of interest.
+
+    Returns
+    -------
+    qcs: list[qiskit.QuantumCircuit]
+        A list of parametrized quantum circuits.
+
+    coefs: list[float]
+        A list of coefficients.
+    
+    T1_param: qiskit.circuit.Parameter
+        A parameter representing the delay time T1.
+
+    T2_param: qiskit.circuit.Parameter
+        A parameter representing the delay time T2.
+
+    T3_param: qiskit.circuit.Parameter
+        A parameter representing the delay time T3.
     '''
     #Generating the parameters.
     T1_param = Parameter("T1")
@@ -180,7 +211,9 @@ def __TOSC_TLS(FD_type: Literal["gsb", "ground state bleaching", "se", "stimulat
                                         T3_param: Parameter,
                                         system: System,
                                         ):
-    '''Just a faster routine for the monomer case (two-level system)'''
+    '''
+    Just a faster routine for the monomer case (two-level system).
+    '''
 
     #Generating the evolution gate. Since the system is a monomer, simplified RZ gates are used instead of an Hamiltonian Gate.
     energy_gap = system.Hamiltonian[1,1] - system.Hamiltonian[0,0]
@@ -221,16 +254,20 @@ def __TOSC_TLS(FD_type: Literal["gsb", "ground state bleaching", "se", "stimulat
 def X_measure(qc_input: QuantumCircuit,
               qubit,
               ) -> QuantumCircuit:
-    '''Add a measure along X-axis on a copy of the circuit (no modifications inplace).
+    '''
+    Add a measure along X-axis on a copy of the circuit (no modifications inplace).
     
-    Input:
-    - qc_input: qiskit.QuantumCircuit
+    Parameters
+    ----------
+    qc_input: qiskit.QuantumCircuit
         The quantum circuit.
-    - qubit
+
+    qubit
         The qubit that have to be measured.
         
-    Return:
-    QuantumCircuit
+    Returns
+    -------
+    qc: qiskit.QuantumCircuit
     '''
     #Creating a copy of the circuit.
     qc = qc_input.copy()
@@ -249,16 +286,20 @@ def X_measure(qc_input: QuantumCircuit,
 def Y_measure(qc_input: QuantumCircuit,
               qubit,
               ) -> QuantumCircuit:
-    '''Add a measure along Y-axis on a copy of the circuit (no modifications inplace).
+    '''
+    Add a measure along Y-axis on a copy of the circuit (no modifications inplace).
     
-    Input:
-    - qc_input: qiskit.QuantumCircuit
+    Parameters
+    ----------
+    qc_input: qiskit.QuantumCircuit
         The quantum circuit.
-    - qubit
+
+    qubit
         The qubit that have to be measured.
         
-    Return:
-    QuantumCircuit
+    Returns
+    -------
+    qc: qiskit.QuantumCircuit
     '''
     #Creating a copy of the circuit.
     qc = qc_input.copy()

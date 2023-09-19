@@ -7,13 +7,16 @@ class System():
                  Hamiltonian: list[list[float]] | np.ndarray | Qobj,
                  dipole_moment_amplitude: list[float] | list[int] | float | int = [1],
                  ):
-        '''Create an object that contains the information about the system intended as a collection of (possibly) interactive two-level electronic systems.
+        '''
+        Create an object that contains the information about the system intended as a collection of (possibly) interactive two-level electronic systems.
 
-        Input:
-        - Hamiltonian: Union[list[list[float]], numpy.ndarray, qutip.Qobj]
+        Parameters
+        ----------
+        Hamiltonian: list[list[float]] | numpy.ndarray | qutip.Qobj
             The electronic Hamiltonian of the system on the site basis.
-        - dipole_moment_amplitude: Union[list[float], list[int], float, int]
-            A list of the amplitude of the dipole moments corresponding to the two-level systems that compose the whole system. If a monomer system is considered a float is accepted as input.
+
+        dipole_moment_amplitude: list[float] | list[int] | float | int
+            A list of the amplitude of the dipole moments corresponding to the two-level systems that compose the whole system. If a monomer system is considered, a float is accepted as input.
         '''
         #Checking the Hermiticity of the Hamiltonian. Converting Hamiltonian to numpy.ndarray.
         if isinstance(Hamiltonian, Qobj):
@@ -56,12 +59,15 @@ class FeynmanDiagram():
                  FD_type: Literal["a", "absorption", "gsb", "ground state bleaching", "se", "stimulated emission", "esa", "excited state absorption"],
                  delay_time: np.ndarray | list[list[float]] | list[float] | float | list[list[int]] | list[int] | int,
                  ):
-        '''Create an object that contains the information about the contribution of the response function to be simulated.
+        '''
+        Create an object that contains the information about the contribution of the response function to be simulated.
 
-        Input:
-        - FD_type: Literal["a", "absorption", "gsb", "ground state bleaching", "se", "stimulated emission", "esa", "excited state absorption"]
+        Parameters
+        ----------
+        FD_type: "a" | "absorption" | "gsb" | "ground state bleaching" | "se" | "stimulated emission" | "esa" | "excited state absorption"
             The name of the Feynman diagram. At the moment, only linear absorption and the components of the third-order rephasing signal are implemented.
-        - delay_time: Union[numpy.ndarray, list[list[float]], list[float], float, list[list[int]], list[int], int]
+
+        delay_time: numpy.ndarray | list[list[float]] | list[float] | float | list[list[int]] | list[int] | int
             A list with the delay times. For the linear absorption the input is: list[float] or float. For third-order responses the input is a list with 3 entres (i.e.: [T1_list, T2_list, T3_list]), therefore the accepted types are: list[list[float]] or list[float].
         '''
         #Checking the correct input format for delay_time. Converting float to list when necessary.

@@ -38,7 +38,8 @@ def RotatingFrame(response_function,
                   damping_rate = 0,
                   T2_index = 0,
                   ):
-    '''Method to differentiate the application of the rotating frame between linear and non-linear response_functions.
+    '''
+    Method to differentiate the application of the rotating frame between linear and non-linear response_functions.
     '''
     if FD_type in linear_name_list:
         return __LinearRotatingFrame(response_function, delay_time, RF_freq, damping_rate)
@@ -50,7 +51,8 @@ def __LinearRotatingFrame(response_function,
                           RF_freq = 0,
                           damping_rate = 0,
                           ):
-    ''' Method that apply the rotating frame to the linear response_function.
+    '''
+    Method that apply the rotating frame to the linear response_function.
     '''
     T = np.array(delay_time)
     rf_response_function = response_function * np.exp(+1.j * RF_freq * T) * np.exp(- damping_rate * T)
@@ -62,7 +64,8 @@ def __2DRotatingFrame(response_function,
                       damping_rate = 0,
                       T2_index = 0,
                       ):
-    ''' Method that apply the rotating frame to the non-linear response_function.
+    '''
+    Method that apply the rotating frame to the non-linear response_function.
     '''
     T1 = np.array(delay_time[0])
     T2 = np.array(delay_time[1])
@@ -80,7 +83,8 @@ def FourierTransform(response_function,
                      T2_index = 0,
                      pad = 1,
                      ):
-    ''' Method to differentiate the application of the Fourier Transform between linear and non-linear response_functions.
+    '''
+    Method to differentiate the application of the Fourier Transform between linear and non-linear response_functions.
     '''
     if FD_type in linear_name_list:
         return __LinearFourierTransform(response_function, delay_time, RF_freq, pad)
@@ -92,7 +96,8 @@ def __LinearFourierTransform(response_function,
                              RF_freq = 0,
                              pad = 1,
                              ):
-    ''' Method that apply the Fourier Transform to the linear response_function.
+    '''
+    Method that apply the Fourier Transform to the linear response_function.
     '''
     dt = delay_time[1] - delay_time[0]
     omega = fftshift(2*np.pi*fftfreq(len(delay_time) * pad, dt)) + RF_freq
@@ -105,7 +110,8 @@ def __2DFourierTransform(response_function,
                          T2_index = 0,
                          pad = 1,
                          ):
-    ''' Method that apply the Fourier Transform to the non-linear response_function.
+    '''
+    Method that apply the Fourier Transform to the non-linear response_function.
     '''
     T1 = delay_time[0]
     dt1 = T1[1] - T1[0]
@@ -141,7 +147,8 @@ def __LinearPlotTimeSignal(response_function,
                            figure_name = None,
                            **pltsavefig_kws,
                            ):
-    ''' Method that generate the linear spectrum.
+    '''
+    Method that generate the linear spectrum.
     '''
     plt.plot(delay_time, np.real(response_function))
     plt.plot(delay_time, np.imag(response_function))
@@ -160,7 +167,8 @@ def __2DPlotTimeSignal(response_function,
                        figure_name = None, 
                        **pltsavefig_kws,
                        ):
-    ''' Method that generate the non-linear spectrum.
+    '''
+    Method that generate the non-linear spectrum.
     '''
     real_response_function = np.real(response_function)
     T1 = delay_time[0]
@@ -194,7 +202,8 @@ def PlotSpectra(freq_spectra,
                 figure_name,
                 **pltsavefig_kws,
                 ):
-    ''' Method that generate the spectrum distinguishing between the linear and the non-linear response_function.
+    '''
+    Method that generate the spectrum distinguishing between the linear and the non-linear response_function.
     '''
     if FD_type in linear_name_list:
         __LinearPlotSpectra(freq_spectra, omega, FD_type, save_figure, figure_name, **pltsavefig_kws)
@@ -208,7 +217,8 @@ def __LinearPlotSpectra(freq_spectra,
                         figure_name,
                         **pltsavefig_kws,
                         ):
-    ''' Method that generate the linear spectrum.
+    '''
+    Method that generate the linear spectrum.
     '''
     plt.plot(omega, np.real(freq_spectra))
     plt.xlabel(r'$\omega$')
@@ -227,7 +237,8 @@ def __2DPlotSpectra(freq_spectra,
                     figure_name,
                     **pltsavefig_kws,
                     ):
-    ''' Method that generate the non-linear spectrum.
+    '''
+    Method that generate the non-linear spectrum.
     '''
     omega1 = omega[0]
     omega3 = omega[1]
