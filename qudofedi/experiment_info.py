@@ -8,7 +8,7 @@ class System():
                  dipole_moment_amplitude: list[float] | list[int] | float | int = [1],
                  ):
         '''
-        Create an object that contains the information about the system intended as a collection of (possibly) interactive two-level electronic systems.
+        Create an object that contains the information about the system intended as a collection of (possibly) interacting two-level electronic systems.
 
         Parameters
         ----------
