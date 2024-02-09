@@ -1,13 +1,16 @@
 ![Alt text](Image/qudofedi_logo.png?raw=true "Title")
 # QuDoFeDi
-QuDoFeDi (Quantum simulation of Double-sided Feynman Diagrams) is a Python package that can be used for the computation of the optical response of exciton systems to linear and non-linear electronic spectroscopies.
+QuDoFeDi (Quantum simulation of Double-sided Feynman Diagrams) is a Python package that can be used for the computation of the optical response of exciton systems to linear and non-linear electronic spectroscopic.
 
 QuDoFeDi is based on response theory and allows for the simulation of the double-sided Feynman diagrams that compose the response function of the system.
 
 QuDoFeDi is compatible with IBM Qiskit and can run circuits on IBM Quantum devices.
 
-## Installing the QuDoFeDi package and dependences
-For the use of this software the follwing packages have to be installed:
+The algorithmic strategy has been presented in:
+[Bruschi, M.; Gallina, F.; Fresch, B. A Quantum Algorithm from Response Theory: Digital Quantum Simulation of Two-Dimensional Electronic Spectroscopy. _J. Phys. Chem. Lett._ **2024**, _15_, 1484–1492, DOI: 10.1021/acs.jpclett.3c03499](https://pubs.acs.org/doi/full/10.1021/acs.jpclett.3c03499)
+
+## Installing the QuDoFeDi package and dependencies
+The software requires the following packages to be installed:
 
 - [python3](https://www.python.org/)
 - [numpy](https://numpy.org/)
@@ -16,7 +19,7 @@ For the use of this software the follwing packages have to be installed:
 - [qiskit](https://qiskit.org/)
 - [qutip](https://qutip.org/)
 
-We advise the use of [Conda](https://www.anaconda.com/products/individual) environments for a clean setup.
+We advise using [Conda](https://www.anaconda.com/products/individual) environments for a clean setup.
 
 Once Conda is installed, create a new environment and switch to it by running:
 ```
